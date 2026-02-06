@@ -6,11 +6,10 @@ This repository contains the **Google SecOps Extension**, providing specialized 
 
 This extension packages setup and key security workflows into [skills](https://agentskills.io/specification). 
 
-These skills are **Adaptive**, designed to work seamlessly with:
- *   [Google SecOps Remote MCP Server](https://google.github.io/mcp-security/docs/remote_server.html) (Preferred)
- *   **Local Python Tools** (Fallback)
-
-This allows the skills to function in diverse environments, automatically selecting the best available tool for the job.
+Crucially, it **automatically configures the [Google Cloud Remote MCP Server for SecOps](https://security.googlecloudcommunity.com/community-blog-42/google-cloud-remote-mcp-server-for-secops-6559)**. This means:
+*   **No Local Tools**: You don't need to install or manage local Python environments for standard tools.
+*   **Enterprise Ready**: Connects directly to Google's managed infrastructure for SecOps.
+*   **Adaptive**: While it defaults to the Remote server, it can fallback to local tools if needed.
 
 ## Prerequisites
 
@@ -25,9 +24,14 @@ This allows the skills to function in diverse environments, automatically select
     gcloud auth application-default set-quota-project <YOUR_PROJECT_ID>
     ```
 
-3.  **GUI Login Requirement**: You MUST have logged into the Google SecOps GUI at least once before using the API/MCP server.
+3.  **Enable MCP Service**: You must enable the Chronicle MCP service in your Google Cloud project:
+    ```bash
+    gcloud beta services mcp enable chronicle.googleapis.com/mcp --project=<YOUR_PROJECT_ID>
+    ```
 
-4.  **Enable Skills**: Ensure your `~/.gemini/settings.json` has `experimental.skills` enabled:
+4.  **GUI Login Requirement**: You MUST have logged into the Google SecOps GUI at least once before using the API/MCP server.
+
+5.  **Enable Skills**: Ensure your `~/.gemini/settings.json` has `experimental.skills` enabled:
     ```json
     {
       "security": {
@@ -95,11 +99,21 @@ You should see `secops-setup-antigravity`, `secops-triage`, etc., in the list.
 
 ### Available Skills
 
-*   **Setup Assistant** (`secops-setup-antigravity`): "Help me set up Antigravity"
-*   **Alert Triage** (`secops-triage`): "Triage alert [ID]"
-*   **Investigation** (`secops-investigate`): "Investigate case [ID]"
-*   **Threat Hunting** (`secops-hunt`): "Hunt for [Threat]"
-*   **Cases** (`secops-cases`): "List recent cases"
+*   **Setup Assistant** (`secops-setup-antigravity`)
+    *   *Trigger*: "Help me set up Antigravity", "Configure Antigravity for SecOps"
+    *   *Function*: Helps configure Antigravity to also use the Remote MCP Server.
+*   **Alert Triage** (`secops-triage`)
+    *   *Trigger*: "Triage alert [ID]", "Analyze case [ID]"
+    *   *Function*: Orchestrates a Tier 1 triage workflow (deduplication, enrichment, classification).
+*   **Investigation** (`secops-investigate`)
+    *   *Trigger*: "Investigate case [ID]", "Deep dive on [Entity]"
+    *   *Function*: Guides deep-dive investigations using specialized runbooks.
+*   **Threat Hunting** (`secops-hunt`)
+    *   *Trigger*: "Hunt for [Threat]", "Search for TTP [ID]"
+    *   *Function*: Assists in proactive threat hunting by generating hypotheses and constructing complex UDM queries.
+*   **Cases** (`secops-cases`)
+    *   *Trigger*: "List cases", "Show recent cases", "/secops:cases"
+    *   *Function*: Lists recent SOAR cases to verify connectivity.
 
 ### Custom Commands
 
@@ -120,6 +134,8 @@ Known-good values for Regional Endpoints (REP):
 * `https://chronicle.us.rep.googleapis.com/mcp` (Multi-Regional)
 
 ## References
+* [Google Cloud Remote MCP Server for SecOps Blog](https://security.googlecloudcommunity.com/community-blog-42/google-cloud-remote-mcp-server-for-secops-6559)
 * [Agent Skills Specification](https://agentskills.io/specification)
 * [Gemini CLI Documentation](https://geminicli.com)
+* [Antigravity Skills](https://antigravity.google/docs/skills)
 * [Use the Google SecOps MCP server](https://docs.cloud.google.com/chronicle/docs/secops/use-google-secops-mcp)
