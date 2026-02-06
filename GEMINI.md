@@ -72,6 +72,11 @@ gemini extensions install github:dandye/secops-gemini-extension
     gemini extensions install .
     ```
 
+### Updating and Uninstalling
+
+*   **Update**: `gemini extensions update google-secops`
+*   **Uninstall**: `gemini extensions uninstall google-secops`
+
 ## Post-Installation
 
 ### 1. Configuration
