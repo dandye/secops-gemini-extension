@@ -1,6 +1,6 @@
 # Google SecOps Extension
 
-This repository contains the **Google SecOps Extension**, providing specialized skills for security operations.
+This repository contains the **Google SecOps Extension**, providing specialized skills and tools for security operations.
 
 ## Overview
 
@@ -19,9 +19,15 @@ This allows the skills to function in diverse environments, automatically select
     npm install -g @google/gemini-cli@preview
     ```
 
-2.  **GUI Login Requirement**: You MUST have logged into the Google SecOps GUI at least once before using the API/MCP server.
+2.  **Google Cloud Authentication**: Ensure you are authenticated with Google Cloud and have set a quota project:
+    ```bash
+    gcloud auth application-default login
+    gcloud auth application-default set-quota-project <YOUR_PROJECT_ID>
+    ```
 
-3.  **Enable Skills**: Ensure your `~/.gemini/settings.json` has `experimental.skills` enabled:
+3.  **GUI Login Requirement**: You MUST have logged into the Google SecOps GUI at least once before using the API/MCP server.
+
+4.  **Enable Skills**: Ensure your `~/.gemini/settings.json` has `experimental.skills` enabled:
     ```json
     {
       "security": {
@@ -39,24 +45,17 @@ This allows the skills to function in diverse environments, automatically select
     }
     ```
 
-Verify skills are enabled from the Gemini CLI prompt:
-```
-/skills list
-```
-
 ## Installation
 
-### Option 1: Install from GitHub (Recommended)
+### Option 1: Install directly from GitHub (Fastest)
 
-You can install this extension directly from the GitHub repository:
+You can install this extension directly without cloning:
 
 ```bash
 gemini extensions install github:dandye/secops-gemini-extension
 ```
 
-### Option 2: Clone and Install Locally
-
-If you want to modify the extension or install it from a local copy:
+### Option 2: Clone and Install Locally (Best for Development)
 
 1.  **Clone the repository**:
     ```bash
@@ -69,89 +68,58 @@ If you want to modify the extension or install it from a local copy:
     gemini extensions install .
     ```
 
-### Configuration
+## Post-Installation
 
-During installation, you will be prompted for environment variables for the MCP configuration:
+### 1. Configuration
 
-1. `PROJECT_ID` (GCP Project ID on your SecOps tenant's /settings/profile page)
-2. `CUSTOMER_ID` (Your Chronicle Customer UUID)
-3. `REGION` (Your Chronicle Region, e.g., `us`, `europe-west1`)
-4. `SERVER_URL` (e.g. https://chronicle.northamerica-northeast2.rep.googleapis.com/mcp, https://chronicle.us.rep.googleapis.com/mcp, etc.)
+During installation, you will be prompted for several parameters:
 
-> **Note**: These values are persisted in the extension's configuration and can be referenced by skills.
+*   `PROJECT_ID`: Your Google Cloud Project ID.
+*   `CUSTOMER_ID`: Your Chronicle Customer UUID.
+*   `REGION`: Your Chronicle Region (e.g., `us`, `europe-west1`).
+*   `SERVER_URL`: The regional MCP endpoint (e.g., `https://chronicle.us.rep.googleapis.com/mcp`).
 
-## Available Skills
+> **Note**: These values are persisted in `~/.gemini/extensions/google-secops/.env`. You can edit this file at any time to update your configuration.
 
-### 1. Setup Assistant (Antigravity) (`secops-setup-antigravity`)
-*   **Trigger**: "Help me set up Antigravity", "Configure Antigravity for SecOps".
-*   **Function**: Checks for Google Cloud authentication and environment variables, then merges the correct configuration into your Antigravity settings.
+### 2. Verify Skills
 
-### 2. Alert Triage (`secops-triage`)
-*   **Trigger**: "Triage alert [ID]", "Analyze case [ID]".
-*   **Function**: Orchestrates a Tier 1 triage workflow. It checks for duplicates, enriches entities, and provides a classification recommendation (FP/TP).
+Run the following command to ensure the skills are loaded:
 
-### 3. Investigation (`secops-investigate`)
-*   **Trigger**: "Investigate case [ID]", "Deep dive on [Entity]".
-*   **Function**: Guides deep-dive investigations using specialized runbooks.
+```bash
+/skills list
+```
 
-### 4. Threat Hunting (`secops-hunt`)
-*   **Trigger**: "Hunt for [Threat]", "Search for TTP [ID]".
-*   **Function**: Assists in proactive threat hunting by generating hypotheses and constructing complex UDM queries for Chronicle.
+You should see `secops-setup-antigravity`, `secops-triage`, etc., in the list.
 
-### 5. Cases (`secops-cases`)
-*   **Trigger**: "List cases", "Show recent cases", "/secops:cases".
-*   **Function**: Lists recent SOAR cases to verify connectivity and view case status.
+## Usage
 
-## Custom Commands
+### Available Skills
 
-You can use the following slash commands as shortcuts for common tasks:
+*   **Setup Assistant** (`secops-setup-antigravity`): "Help me set up Antigravity"
+*   **Alert Triage** (`secops-triage`): "Triage alert [ID]"
+*   **Investigation** (`secops-investigate`): "Investigate case [ID]"
+*   **Threat Hunting** (`secops-hunt`): "Hunt for [Threat]"
+*   **Cases** (`secops-cases`): "List recent cases"
 
-*   `/secops:triage <ALERT_ID>`: Quickly start triaging an alert.
-*   `/secops:investigate <CASE_ID>`: Start an investigation.
-*   `/secops:hunt <THREAT>`: Start a threat hunt.
-*   `/secops:cases`: List recent cases.
+### Custom Commands
 
-## How it Works
+Use these shortcuts for common tasks:
 
-These skills act as **Driver Agents** that:
-1.  **Read** standardized Runbooks.
-2.  **Execute** the steps using the available MCP tools.
-3.  **Standardize** the output according to SOC best practices.
-
-### Tool Selection
-
-The skills employ an **Adaptive Execution** strategy to ensure robustness:
-
-1.  **Check Environment**: The skill first identifies which tools are available in the current workspace.
-2.  **Prioritize Remote**: If the **Remote MCP Server** is connected, the skill uses remote tools (e.g., `list_cases`, `udm_search`) for maximum capability.
-3.  **Fallback to Local**: If remote tools are unavailable, the skill attempts to use **Local Python Tools**.
-
-## Cross-Compatibility
-
-These skills are designed to be compatible with **Claude Code** and other AI agents. The `slash_command` and `personas` metadata in the skill definitions allow other tools to index and trigger these skills effectively.
+*   `/secops:triage <ALERT_ID>`
+*   `/secops:investigate <CASE_ID>`
+*   `/secops:hunt <THREAT>`
+*   `/secops:cases`
 
 ## Known Issues
-* If the `SERVER_URL` requires regionalization (i.e. LEP vs REP vs MREP), it can be very difficult for the user to know what value to use.
 
-Documentation says:
-> Server URL or Endpoint: Select the regional endpoint and add /mcp at the end. For example, https://chronicle.us.rep.googleapis.com/mcp
+* **Regional Endpoints**: If the `SERVER_URL` requires regionalization, ensure you use the correct endpoint from the [official documentation](https://docs.cloud.google.com/chronicle/docs/secops/use-google-secops-mcp).
 
 Known-good values for Regional Endpoints (REP):
-* https://chronicle.us-east1.rep.googleapis.com/mcp
-* https://chronicle.africa-south1.rep.googleapis.com/mcp
-* https://chronicle.asia-northeast1.rep.googleapis.com/mcp
-* https://chronicle.me-central1.rep.googleapis.com/mcp
-* https://chronicle.europe-west1.rep.googleapis.com/mcp
-* https://chronicle.northamerica-northeast2.rep.googleapis.com/mcp
-* https://chronicle.southamerica-east1.rep.googleapis.com/mcp
-* https://chronicle.europe-west2.rep.googleapis.com/mcp
-* ...
-
-Known-good values for Multi-Regional Endpoints (MREP):
-* https://chronicle.us.rep.googleapis.com/mcp
+* `https://chronicle.us-east1.rep.googleapis.com/mcp`
+* `https://chronicle.europe-west1.rep.googleapis.com/mcp`
+* `https://chronicle.us.rep.googleapis.com/mcp` (Multi-Regional)
 
 ## References
 * [Agent Skills Specification](https://agentskills.io/specification)
 * [Gemini CLI Documentation](https://geminicli.com)
-* [Antigravity Skills](https://antigravity.google/docs/skills)
 * [Use the Google SecOps MCP server](https://docs.cloud.google.com/chronicle/docs/secops/use-google-secops-mcp)
